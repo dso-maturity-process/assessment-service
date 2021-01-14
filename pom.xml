@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.4.0</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.governmentcio.dmp</groupId>
+	<artifactId>assessment-service</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>assessment-service</name>
+	<description>Core assessment functionality - create, persist and read.</description>
+
+	<properties>
+
+		<java.version>1.8</java.version>
+		<jdk.version>1.8</jdk.version>
+
+		<!-- Plugin versions -->
+		<findbugs.maven.plugin.version>3.0.5</findbugs.maven.plugin.version>
+		<checkstyle.plugin.version>3.0.0</checkstyle.plugin.version>
+		<maven.project.info.reports.plugin>3.0.0</maven.project.info.reports.plugin>
+		<maven.jxr.plugin.version>3.0.0</maven.jxr.plugin.version>
+		<maven.release.plugin.version>2.5.3</maven.release.plugin.version>
+		<jacoco.maven.plugin.version>0.8.2</jacoco.maven.plugin.version>
+		<maven.javadoc.plugin.version>3.1.1</maven.javadoc.plugin.version>
+		<dependency.check.maven.version>6.0.3</dependency.check.maven.version>
+		<findsecbugs-plugin.version>1.8.0</findsecbugs-plugin.version>
+		<spotbugs-maven-plugin.version>3.1.12</spotbugs-maven-plugin.version>
+		<com.github.spotbugs.version>4.0.0-beta3</com.github.spotbugs.version>
+		<exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+		<maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
+		<maven-site-plugin.version>3.6</maven-site-plugin.version>
+		<wagon-ssh.version>3.2.0</wagon-ssh.version>
+
+		<!-- Checkstyle standards location -->
+
+		<checkstyle.config.location>src/main/resources/customized-sun-checks.xml</checkstyle.config.location>
+
+		<!-- Used to locate the profile specific configuration file. -->
+		<build.profile.id>dev</build.profile.id>
+		<!-- Destination for JaCoCo report output -->
+		<jacoco.it.execution.data.file>${project.build.directory}/coverage-reports/jacoco-it.exec</jacoco.it.execution.data.file>
+		<jacoco.ut.execution.data.file>${project.build.directory}/coverage-reports/jacoco-ut.exec</jacoco.ut.execution.data.file>
+		<!-- Only unit tests are run by default. -->
+
+		<skip.integration.tests>true</skip.integration.tests>
+		<skip.unit.tests>false</skip.unit.tests>
+		<surefireArgLine>-DdomainName=test</surefireArgLine>
+
+		<!-- Sonar -->
+		<sonar.param.host.url>http://swf.devgovcio.com/sonar</sonar.param.host.url>
+		<sonar.param.login>a2867e4642bafcb41660ee86504a3855a71b5a62</sonar.param.login>
+
+		<k8s-target>local</k8s-target>
+
+		<!-- DMP domain model -->
+		<domain.model.version>0.0.1-SNAPSHOT</domain.model.version>
+
+		<!-- DAO model -->
+		<doa.version>0.0.1-SNAPSHOT</doa.version>
+
+	</properties>
+
+	<!-- Profiles -->
+
+	<profiles>
+		<profile>
+			<id>dev</id>
+		</profile>
+
+		<!-- Executes unit and integration tests -->
+
+		<profile>
+			<id>all-tests</id>
+			<properties>
+				<build.profile.id>all-tests</build.profile.id>
+				<!-- All tests are run. -->
+				<skip.integration.tests>false</skip.integration.tests>
+				<skip.unit.tests>false</skip.unit.tests>
+			</properties>
+		</profile>
+
+		<!-- Executes only integration tests -->
+
+		<profile>
+			<id>integration-tests</id>
+			<properties>
+				<!-- Used to locate the profile specific configuration file. -->
+				<build.profile.id>integration-test</build.profile.id>
+				<!-- Only integration tests are run. -->
+				<skip.integration.tests>false</skip.integration.tests>
+				<skip.unit.tests>true</skip.unit.tests>
+			</properties>
+		</profile>
+
+		<!-- Sonar -->
+
+		<profile>
+
+			<id>sonar</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+
+				<sonar.host.url>${sonar.param.host.url}</sonar.host.url>
+				<sonar.login>${sonar.param.login}</sonar.login>
+
+				<sonar.language>java</sonar.language>
+				<sonar.jdbc.driver>com.mysql.jdbc.Driver</sonar.jdbc.driver>
+				<sonar.sources>src/main/java</sonar.sources>
+				<sonar.tests>src/test</sonar.tests>
+				<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+				<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+				<sonar.jacoco.reportPaths>${basedir}/target/coverage-reports/jacoco-ut.exec</sonar.jacoco.reportPaths>
+				<!-- <sonar.exclusions>src/main/java/com/governmentcio/rest/webservices/countryservice/model/*</sonar.exclusions> -->
+			</properties>
+		</profile>
+
+		<!-- Security scan -->
+
+		<profile>
+			<id>sec-scan</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<!-- OWASP dependency security scan -->
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<version>${dependency.check.maven.version}</version>
+						<configuration>
+							<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<!-- FindBugs -->
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>findbugs-maven-plugin</artifactId>
+						<version>${findbugs.maven.plugin.version}</version>
+						<configuration>
+							<!-- Enables analysis which takes more memory but finds more bugs. 
+								If you run out of memory, changes the value of the effort element to 'Low'. -->
+							<effort>Max</effort>
+							<!-- Reports all bugs (other values are medium and max) -->
+							<threshold>Low</threshold>
+							<!-- Produces XML report -->
+							<xmlOutput>true</xmlOutput>
+							<!-- Configures the directory in which the XML report is created -->
+							<findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+							<failOnError>false</failOnError>
+							<includeFilterFile>${project.basedir}/src/main/resources/findbugs-security-include.xml</includeFilterFile>
+							<excludeFilterFile>${project.basedir}/src/main/resources/findbugs-security-exclude.xml</excludeFilterFile>
+							<plugins>
+								<plugin>
+									<groupId>com.h3xstream.findsecbugs</groupId>
+									<artifactId>findsecbugs-plugin</artifactId>
+									<version>${findsecbugs-plugin.version}</version>
+								</plugin>
+							</plugins>
+						</configuration>
+						<executions>
+							<!-- Ensures that FindBugs inspects source code when project is compiled. -->
+							<execution>
+								<id>analyze-compile</id>
+								<phase>compile</phase>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+	</profiles>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-hateoas</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- DMP model -->
+		<dependency>
+			<groupId>com.governmentcio.dmp.model</groupId>
+			<artifactId>domain-model</artifactId>
+			<version>${domain.model.version}</version>
+		</dependency>
+		<!-- DMP DAOs -->
+		<dependency>
+			<groupId>com.governmentcio.dmp</groupId>
+			<artifactId>dao</artifactId>
+			<version>${doa.version}</version>
+		</dependency>
+
+	</dependencies>
+
+	<!-- Build -->
+
+	<build>
+
+		<defaultGoal>install</defaultGoal>
+
+		<filters>
+			<filter>profiles/${build.profile.id}/config.properties</filter>
+		</filters>
+
+		<resources>
+			<resource>
+				<filtering>true</filtering>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<!-- http://www.mojohaus.org/build-helper-maven-plugin - used to add integration 
+				test source directories to our build. -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<!-- plugin's add-test-source goal is executed at generate-test-sources 
+						phase. -->
+					<execution>
+						<id>add-integration-test-sources</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>add-test-source</goal>
+						</goals>
+						<configuration>
+							<!-- Configures the source directory of integration tests. -->
+							<sources>
+								<source>src/integration-test/java</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- https://maven.apache.org/plugins/maven-project-info-reports-plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>${maven.project.info.reports.plugin}</version>
+			</plugin>
+
+			<!--https://maven.apache.org/plugins/maven-compiler-plugin/ -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
+				</configuration>
+			</plugin>
+
+			<!-- http://maven.apache.org/jxr/maven-jxr-plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<version>${maven.jxr.plugin.version}</version>
+			</plugin>
+
+			<!-- https://maven.apache.org/plugins/maven-checkstyle-plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>${checkstyle.plugin.version}</version>
+				<executions>
+					<execution>
+						<id>checkstyle</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<encoding>UTF-8</encoding>
+							<consoleOutput>false</consoleOutput>
+							<failsOnError>false</failsOnError>
+							<failOnViolation>false</failOnViolation>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- https://maven.apache.org/plugins/maven-resources-plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+
+			<!-- https://maven.apache.org/plugins/maven-dependency-plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+			</plugin>
+
+			<!-- http://maven.apache.org/maven-release/maven-release-plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>${maven.release.plugin.version}</version>
+				<configuration>
+					<preparationGoals>clean verify install</preparationGoals>
+				</configuration>
+			</plugin>
+
+			<!-- http://maven.apache.org/surefire/maven-surefire-plugin - unit tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- Sets the VM argument line used when unit tests are run. -->
+					<argLine>${surefireArgLine}</argLine>
+					<!-- Skips unit tests if the value of skip.unit.tests property is true -->
+					<skipTests>${skip.unit.tests}</skipTests>
+					<!-- Excludes integration tests when unit tests are run. -->
+					<excludes>
+						<exclude>**/*IntegrationTests*.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+
+			<!-- https://spotbugs.github.io/spotbugs-maven-plugin/ -->
+
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+				<version>${spotbugs-maven-plugin.version}</version>
+				<dependencies>
+					<!-- overwrite dependency on spotbugs if you want to specify the version 
+						of spotbugs -->
+					<dependency>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs</artifactId>
+						<version>${com.github.spotbugs.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
+			<!-- FindBugs - https://gleclaire.github.io/findbugs-maven-plugin/usage.html -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>${findbugs.maven.plugin.version}</version>
+				<configuration>
+					<!-- Enables analysis which takes more memory but finds more bugs. If 
+						you run out of memory, changes the value of the effort element to 'Low'. -->
+					<effort>Max</effort>
+					<!-- Reports all bugs (other values are medium and max) -->
+					<threshold>Low</threshold>
+					<!-- Produces XML report -->
+					<xmlOutput>true</xmlOutput>
+					<!-- Configures the directory in which the XML report is created -->
+					<findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory>
+					<failOnError>false</failOnError>
+				</configuration>
+				<executions>
+					<!-- Ensures that FindBugs inspects source code when project is compiled. -->
+					<execution>
+						<id>analyze-compile</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- http://www.eclemma.org/jacoco/trunk/doc/maven.html - JaCoCo plugin 
+				for reporting unit test coverage -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.maven.plugin.version}</version>
+
+				<executions>
+					<!-- Prepares the property pointing to the JaCoCo runtime agent which 
+						is passed as VM argument when Maven the Surefire plugin is executed. -->
+					<execution>
+						<id>pre-unit-test</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<!-- Sets the path to the file which contains the execution data. -->
+							<destFile>${jacoco.ut.execution.data.file}</destFile>
+							<!-- Sets the name of the property containing the settings for JaCoCo 
+								runtime agent. -->
+							<propertyName>surefireArgLine</propertyName>
+						</configuration>
+					</execution>
+					<!-- Ensures that the code coverage report for unit tests is created 
+						after unit tests have been run. -->
+					<execution>
+						<id>post-unit-test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<!-- Sets the path to the file which contains the execution data. -->
+							<dataFile>${jacoco.ut.execution.data.file}</dataFile>
+							<!-- Sets the output directory for the code coverage report. -->
+							<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+						</configuration>
+					</execution>
+					<!-- Prepares the property pointing to the JaCoCo runtime agent which 
+						is passed as VM argument when Maven the Failsafe plugin is executed. -->
+					<execution>
+						<id>pre-integration-test</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<!-- Sets the path to the file which contains the execution data. -->
+							<destFile>${jacoco.it.execution.data.file}</destFile>
+							<!-- Sets the name of the property containing the settings for JaCoCo 
+								runtime agent. -->
+							<propertyName>failsafeArgLine</propertyName>
+						</configuration>
+					</execution>
+					<!-- Ensures that the code coverage report for integration tests after 
+						integration tests have been run. -->
+					<execution>
+						<id>post-integration-test</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<!-- Sets the path to the file which contains the execution data. -->
+							<dataFile>${jacoco.it.execution.data.file}</dataFile>
+							<!-- Sets the output directory for the code coverage report. -->
+							<outputDirectory>${project.reporting.outputDirectory}/jacoco-it</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- http://maven.apache.org/surefire/maven-failsafe-plugin - integration 
+				tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<!-- Ensures that both integration-test and verify goals of the failsafe 
+						Maven plugin are executed. -->
+					<execution>
+						<id>integration-tests</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<!-- Sets the VM argument line used when integration tests are run. -->
+							<argLine>${failsafeArgLine}</argLine>
+							<!-- Skips integration tests if the value of skip.integration.tests 
+								property is true -->
+							<skipTests>${skip.integration.tests}</skipTests>
+							<includes>
+								<include>**/*IntegrationTests*.java</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- https://mvnrepository.com/artifact/org.codehaus.mojo/exec-maven-plugin -->
+			<plugin>
+				<artifactId>exec-maven-plugin</artifactId>
+				<groupId>org.codehaus.mojo</groupId>
+				<version>${exec-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>Build Docker image</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>${basedir}/build-image.sh</executable>
+						</configuration>
+					</execution>
+					<execution>
+						<id>Push Docker image</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>${basedir}/push-image.sh</executable>
+						</configuration>
+					</execution>
+					<execution>
+						<id>Deploy to K8S or Minikube</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>${basedir}/deploy-application.sh</executable>
+						</configuration>
+					</execution>
+					<execution>
+						<id>Validate ingress end point</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>${basedir}/check-endpoint.sh</executable>
+							<arguments>
+								<argument>assessment-service-ingress</argument>
+								<argument>kube-system</argument>
+								<argument>10</argument>
+								<argument>10</argument>
+								<argument>${k8s-target}</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>Validate service availability</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>${basedir}/check-service.sh</executable>
+							<arguments>
+								<argument>http://gov-cio.test/assessment/healthz</argument>
+								<argument>10</argument>
+								<argument>10</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- https://maven.apache.org/plugins/maven-site-plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>${maven-site-plugin.version}</version>
+				<configuration>
+					<port>80</port>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<!-- add support for ssh/scp -->
+						<groupId>org.apache.maven.wagon</groupId>
+						<artifactId>wagon-ssh</artifactId>
+						<version>${wagon-ssh.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
+		</plugins>
+
+	</build>
+
+</project>
