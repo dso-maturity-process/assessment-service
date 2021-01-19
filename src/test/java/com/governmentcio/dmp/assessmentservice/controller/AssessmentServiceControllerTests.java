@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import com.governmentcio.dmp.Application;
+import com.governmentcio.dmp.model.QuestionTemplate;
 import com.governmentcio.dmp.model.SurveyInstance;
 import com.governmentcio.dmp.model.SurveyTemplate;
 
@@ -40,12 +42,6 @@ import com.governmentcio.dmp.model.SurveyTemplate;
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureStubRunner(stubsMode = StubRunnerProperties.StubsMode.LOCAL, ids = "com.governmentcio.dmp:survey-service:+:stubs:8090")
 class AssessmentServiceControllerTests {
-
-//	@Rule
-//	public StubRunnerRule stubRunnerRule = new StubRunnerRule()
-//			.downloadStub("com.governmentcio.dmp", "survey-service", "0.0.1-SNAPSHOT",
-//					"stubs")
-//			.withPort(8090).stubsMode(StubRunnerProperties.StubsMode.LOCAL);
 
 	@LocalServerPort
 	private int port;
@@ -74,6 +70,25 @@ class AssessmentServiceControllerTests {
 				.isEqualTo(10001l);
 		BDDAssertions.then(surveyTemplateResponseEntity.getBody().getName())
 				.isEqualTo("VeteransAdministration-DSO");
+		BDDAssertions.then(surveyTemplateResponseEntity.getBody().getDescription())
+				.isEqualTo("Primary survey for the VA");
+
+		Set<QuestionTemplate> questionTemplates = surveyTemplateResponseEntity
+				.getBody().getQuestionTemplates();
+
+		BDDAssertions.then(questionTemplates.size()).isEqualTo(2);
+
+		for (QuestionTemplate questionTemplate : questionTemplates) {
+			if (questionTemplate.getId() == 20001L) {
+				BDDAssertions.then(questionTemplate.getText())
+						.isEqualTo("Text for the first question");
+			} else if (questionTemplate.getId() == 20002L) {
+				BDDAssertions.then(questionTemplate.getText())
+						.isEqualTo("Text for the second question");
+			} else {
+				BDDAssertions.then(false);
+			}
+		}
 	}
 
 	/**
