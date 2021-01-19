@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.assertj.core.api.BDDAssertions;
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,7 @@ import com.governmentcio.dmp.Application;
 import com.governmentcio.dmp.model.QuestionTemplate;
 import com.governmentcio.dmp.model.SurveyInstance;
 import com.governmentcio.dmp.model.SurveyTemplate;
+import com.governmentcio.dmp.utility.ServiceHealth;
 
 /**
  * 
@@ -52,6 +54,9 @@ class AssessmentServiceControllerTests {
 
 	private static final String BASE_URL = "/assessment";
 
+	/**
+	 * 
+	 */
 	@Test
 	public void get_SurveyTemplate_by_Name() {
 		// given:
@@ -229,12 +234,24 @@ class AssessmentServiceControllerTests {
 	 *
 	 */
 	@Test
-	public void testHealth() {
+	public void testHealth() throws JSONException {
 
-		AssessmentServiceController asc = new AssessmentServiceController();
+		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
-		assertTrue(asc.healthz());
+		ResponseEntity<ServiceHealth> response = restTemplate.exchange(
+				createURLWithPort("/healthz"), HttpMethod.GET, entity,
+				new ParameterizedTypeReference<ServiceHealth>() {
+				});
 
+		assertNotNull(response);
+
+		assertTrue(response.getStatusCode() == HttpStatus.OK);
+
+		ServiceHealth srvHealth = response.getBody();
+
+		assertNotNull(srvHealth);
+
+		assertTrue(srvHealth.isHealthy());
 	}
 
 	/**
