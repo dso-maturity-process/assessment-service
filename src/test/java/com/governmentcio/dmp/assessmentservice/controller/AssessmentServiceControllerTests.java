@@ -8,11 +8,14 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.cloud.contract.stubrunner.spring.AutoConfigureStubRunner;
+import org.springframework.cloud.contract.stubrunner.spring.StubRunnerProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,9 +24,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestTemplate;
 
 import com.governmentcio.dmp.Application;
 import com.governmentcio.dmp.model.SurveyInstance;
+import com.governmentcio.dmp.model.SurveyTemplate;
 
 /**
  * 
@@ -33,7 +38,14 @@ import com.governmentcio.dmp.model.SurveyInstance;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureStubRunner(stubsMode = StubRunnerProperties.StubsMode.LOCAL, ids = "com.governmentcio.dmp:survey-service:+:stubs:8090")
 class AssessmentServiceControllerTests {
+
+//	@Rule
+//	public StubRunnerRule stubRunnerRule = new StubRunnerRule()
+//			.downloadStub("com.governmentcio.dmp", "survey-service", "0.0.1-SNAPSHOT",
+//					"stubs")
+//			.withPort(8090).stubsMode(StubRunnerProperties.StubsMode.LOCAL);
 
 	@LocalServerPort
 	private int port;
@@ -43,6 +55,26 @@ class AssessmentServiceControllerTests {
 	HttpHeaders headers = new HttpHeaders();
 
 	private static final String BASE_URL = "/assessment";
+
+	@Test
+	public void get_SurveyTemplate_by_Name() {
+		// given:
+		RestTemplate restTemplate = new RestTemplate();
+
+		// when:
+		ResponseEntity<SurveyTemplate> surveyTemplateResponseEntity = restTemplate
+				.getForEntity(
+						"http://localhost:8090/survey/getSurveyTemplate/VeteransAdministration-DSO",
+						SurveyTemplate.class);
+
+		// then:
+		BDDAssertions.then(surveyTemplateResponseEntity.getStatusCodeValue())
+				.isEqualTo(200);
+		BDDAssertions.then(surveyTemplateResponseEntity.getBody().getId())
+				.isEqualTo(10001l);
+		BDDAssertions.then(surveyTemplateResponseEntity.getBody().getName())
+				.isEqualTo("VeteransAdministration-DSO");
+	}
 
 	/**
 	 * 
