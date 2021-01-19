@@ -28,7 +28,7 @@ while [ $response -ne 200 ]; do
 
   count=$count+1
 
-  response=$(curl -X POST --write-out "%{http_code}\n" --silent --output /dev/null $servicename)
+  response=$(curl -X GET --write-out "%{http_code}\n" --silent --output /dev/null $servicename)
 
   if [[ $count -gt $attempts ]]; then
     echo "Limit of "$attempts" has been exceeded."
