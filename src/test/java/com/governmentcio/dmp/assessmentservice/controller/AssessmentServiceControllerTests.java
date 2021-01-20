@@ -52,7 +52,71 @@ class AssessmentServiceControllerTests {
 
 	HttpHeaders headers = new HttpHeaders();
 
-	private static final String BASE_URL = "/assessment";
+	private static final String ASSESSMENT_URL = "/assessment";
+	private static final String SURVEY_URL = "/survey";
+
+	/**
+	 * 
+	 */
+	@Test
+	public void get_SurveyTemplate_by_Id() {
+		// given:
+		RestTemplate restTemplate = new RestTemplate();
+
+		// when:
+		ResponseEntity<SurveyTemplate> surveyTemplateResponseEntity = restTemplate
+				.getForEntity(
+						"http://localhost:8090/survey/getSurveyTemplateById/10001",
+						SurveyTemplate.class);
+
+		// then:
+		BDDAssertions.then(surveyTemplateResponseEntity.getStatusCodeValue())
+				.isEqualTo(200);
+		BDDAssertions.then(surveyTemplateResponseEntity.getBody().getId())
+				.isEqualTo(10001l);
+		BDDAssertions.then(surveyTemplateResponseEntity.getBody().getName())
+				.isEqualTo("VeteransAdministration-DSO");
+		BDDAssertions.then(surveyTemplateResponseEntity.getBody().getDescription())
+				.isEqualTo("Primary survey for the VA");
+
+		Set<QuestionTemplate> questionTemplates = surveyTemplateResponseEntity
+				.getBody().getQuestionTemplates();
+
+		BDDAssertions.then(questionTemplates.size()).isEqualTo(2);
+
+		for (QuestionTemplate questionTemplate : questionTemplates) {
+			if (questionTemplate.getId() == 20001L) {
+				BDDAssertions.then(questionTemplate.getText())
+						.isEqualTo("Text for the first question");
+			} else if (questionTemplate.getId() == 20002L) {
+				BDDAssertions.then(questionTemplate.getText())
+						.isEqualTo("Text for the second question");
+			} else {
+				BDDAssertions.then(false);
+			}
+		}
+	}
+
+	/**
+	 * 
+	 */
+	@Test
+	public void remove_QuestionTemplate_by_Id() {
+		// given:
+		RestTemplate restTemplate = new RestTemplate();
+
+		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+
+		// when:
+		ResponseEntity<Void> responseVoid = restTemplate.exchange(
+				createSurveyURLWithPort("/removeQuestionTemplate/10001"),
+				HttpMethod.DELETE, entity, new ParameterizedTypeReference<Void>() {
+				});
+
+		assertNotNull(responseVoid);
+		assertTrue(responseVoid.getStatusCode() == HttpStatus.OK);
+
+	}
 
 	/**
 	 * 
@@ -262,7 +326,11 @@ class AssessmentServiceControllerTests {
 	 * @return Valid URL for local host and port.
 	 */
 	private String createURLWithPort(String uri) {
-		return "http://localhost:" + port + BASE_URL + uri;
+		return "http://localhost:" + port + ASSESSMENT_URL + uri;
+	}
+
+	private String createSurveyURLWithPort(String uri) {
+		return "http://localhost:8090" + SURVEY_URL + uri;
 	}
 
 }

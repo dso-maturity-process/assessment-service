@@ -12,12 +12,16 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.governmentcio.dmp.dao.DomainFactory;
 import com.governmentcio.dmp.dao.SurveyInstanceDao;
 import com.governmentcio.dmp.exception.AssessmentServiceException;
+import com.governmentcio.dmp.model.QuestionTemplate;
 import com.governmentcio.dmp.model.SurveyInstance;
+import com.governmentcio.dmp.model.SurveyTemplate;
 import com.governmentcio.dmp.repository.SurveyInstanceRepository;
 
 /**
@@ -97,6 +101,15 @@ public class AssessmentServiceImpl implements AssessmentService {
 				surveyInstance.getName());
 
 		surveyInstanceDao.setDescription(surveyInstance.getDescription());
+
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<SurveyTemplate> surveyTemplateResponseEntity = restTemplate
+				.getForEntity(
+						"http://localhost:8090/survey/getSurveyTemplateById/10001",
+						SurveyTemplate.class);
+
+		Set<QuestionTemplate> questionTemplates = surveyTemplateResponseEntity
+				.getBody().getQuestionTemplates();
 
 		SurveyInstanceDao newSurveyInstanceDao = surveyInstanceRepository
 				.save(surveyInstanceDao);
