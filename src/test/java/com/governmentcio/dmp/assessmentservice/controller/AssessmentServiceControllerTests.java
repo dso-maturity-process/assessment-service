@@ -13,6 +13,7 @@ import org.assertj.core.api.BDDAssertions;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -45,6 +46,15 @@ import com.governmentcio.dmp.utility.ServiceHealth;
 @AutoConfigureStubRunner(stubsMode = StubRunnerProperties.StubsMode.LOCAL, ids = "com.governmentcio.dmp:survey-service:+:stubs:8090")
 class AssessmentServiceControllerTests {
 
+	@Value("${survey.service.host}")
+	private String surveyServiceHost;
+
+	@Value("${survey.service.port}")
+	private Long surveyServicePort;
+
+	@Value("${survey.service.name}")
+	private String surveyServiceName;
+
 	@LocalServerPort
 	private int port;
 
@@ -53,7 +63,6 @@ class AssessmentServiceControllerTests {
 	HttpHeaders headers = new HttpHeaders();
 
 	private static final String ASSESSMENT_URL = "/assessment";
-	private static final String SURVEY_URL = "/survey";
 
 	/**
 	 * 
@@ -65,8 +74,7 @@ class AssessmentServiceControllerTests {
 
 		// when:
 		ResponseEntity<SurveyTemplate> surveyTemplateResponseEntity = restTemplate
-				.getForEntity(
-						"http://localhost:8090/survey/getSurveyTemplateById/10001",
+				.getForEntity(createSurveyURLWithPort("/getSurveyTemplateById/10001"),
 						SurveyTemplate.class);
 
 		// then:
@@ -169,8 +177,8 @@ class AssessmentServiceControllerTests {
 		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
 		ResponseEntity<Iterable<SurveyInstance>> response = restTemplate.exchange(
-				createURLWithPort("/allSurveyInstances"), HttpMethod.GET, entity,
-				new ParameterizedTypeReference<Iterable<SurveyInstance>>() {
+				createAssessmentURLWithPort("/allSurveyInstances"), HttpMethod.GET,
+				entity, new ParameterizedTypeReference<Iterable<SurveyInstance>>() {
 				});
 
 		assertNotNull(response);
@@ -187,7 +195,7 @@ class AssessmentServiceControllerTests {
 		List<MediaType> acceptableMediaTypes = new ArrayList<MediaType>();
 		acceptableMediaTypes.add(MediaType.APPLICATION_JSON);
 
-		Long surveyTemplateId = 9191L;
+		Long surveyTemplateId = 10001L;
 		String name = "Test survey name";
 		String description = "Test survey description";
 		Long projectId = 8181L;
@@ -205,8 +213,8 @@ class AssessmentServiceControllerTests {
 				surveyInstance, headers);
 
 		ResponseEntity<SurveyInstance> response = restTemplate.exchange(
-				createURLWithPort("/addSurveyInstance"), HttpMethod.POST, surveyEntity,
-				SurveyInstance.class);
+				createAssessmentURLWithPort("/addSurveyInstance"), HttpMethod.POST,
+				surveyEntity, SurveyInstance.class);
 
 		assertNotNull(response);
 
@@ -225,7 +233,8 @@ class AssessmentServiceControllerTests {
 		// Get the SurveyInstance just added
 
 		response = restTemplate.exchange(
-				createURLWithPort("/getSurveyInstance/" + newSurveyInstance.getId()),
+				createAssessmentURLWithPort(
+						"/getSurveyInstance/" + newSurveyInstance.getId()),
 				HttpMethod.GET, surveyEntity,
 				new ParameterizedTypeReference<SurveyInstance>() {
 				});
@@ -255,7 +264,7 @@ class AssessmentServiceControllerTests {
 						retrievedSurveyInstance, headers);
 
 		ResponseEntity<Void> responseVoid = restTemplate.exchange(
-				createURLWithPort("/updateSurveyInstance"), HttpMethod.POST,
+				createAssessmentURLWithPort("/updateSurveyInstance"), HttpMethod.POST,
 				updatedQuestionEntity, new ParameterizedTypeReference<Void>() {
 				});
 
@@ -266,7 +275,7 @@ class AssessmentServiceControllerTests {
 		// Remove the SurveyInstance
 
 		responseVoid = restTemplate.exchange(
-				createURLWithPort(
+				createAssessmentURLWithPort(
 						"/removeSurveyInstance/" + retrievedSurveyInstance.getId()),
 				HttpMethod.DELETE, surveyEntity,
 				new ParameterizedTypeReference<Void>() {
@@ -279,7 +288,8 @@ class AssessmentServiceControllerTests {
 		// Ensure SurveyInstance removed
 
 		response = restTemplate.exchange(
-				createURLWithPort("/getSurveyInstance/" + newSurveyInstance.getId()),
+				createAssessmentURLWithPort(
+						"/getSurveyInstance/" + newSurveyInstance.getId()),
 				HttpMethod.GET, surveyEntity,
 				new ParameterizedTypeReference<SurveyInstance>() {
 				});
@@ -303,7 +313,7 @@ class AssessmentServiceControllerTests {
 		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
 		ResponseEntity<ServiceHealth> response = restTemplate.exchange(
-				createURLWithPort("/healthz"), HttpMethod.GET, entity,
+				createAssessmentURLWithPort("/healthz"), HttpMethod.GET, entity,
 				new ParameterizedTypeReference<ServiceHealth>() {
 				});
 
@@ -319,18 +329,22 @@ class AssessmentServiceControllerTests {
 	}
 
 	/**
-	 * Returns a valid URL for local host, available port and user supplied
-	 * mapping.
 	 * 
-	 * @param string Mapping to controller function.
-	 * @return Valid URL for local host and port.
+	 * @param uri
+	 * @return
 	 */
-	private String createURLWithPort(String uri) {
+	private String createAssessmentURLWithPort(String uri) {
 		return "http://localhost:" + port + ASSESSMENT_URL + uri;
 	}
 
+	/**
+	 * 
+	 * @param uri
+	 * @return
+	 */
 	private String createSurveyURLWithPort(String uri) {
-		return "http://localhost:8090" + SURVEY_URL + uri;
+		return "http://" + surveyServiceHost + ":" + surveyServicePort + "/"
+				+ surveyServiceName + uri;
 	}
 
 }

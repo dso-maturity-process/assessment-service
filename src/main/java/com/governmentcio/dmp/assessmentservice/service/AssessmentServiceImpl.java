@@ -12,17 +12,20 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.governmentcio.dmp.dao.DomainFactory;
 import com.governmentcio.dmp.dao.SurveyInstanceDao;
+import com.governmentcio.dmp.dao.SurveyResponseDao;
 import com.governmentcio.dmp.exception.AssessmentServiceException;
 import com.governmentcio.dmp.model.QuestionTemplate;
 import com.governmentcio.dmp.model.SurveyInstance;
 import com.governmentcio.dmp.model.SurveyTemplate;
 import com.governmentcio.dmp.repository.SurveyInstanceRepository;
+import com.governmentcio.dmp.repository.SurveyResponseRepository;
 
 /**
  * 
@@ -32,6 +35,15 @@ import com.governmentcio.dmp.repository.SurveyInstanceRepository;
 @Service
 public class AssessmentServiceImpl implements AssessmentService {
 
+	@Value("${survey.service.host}")
+	private String surveyServiceHost;
+
+	@Value("${survey.service.port}")
+	private Long surveyServicePort;
+
+	@Value("${survey.service.name}")
+	private String surveyServiceName;
+
 	/**
 	 * Logger instance.
 	 */
@@ -40,6 +52,9 @@ public class AssessmentServiceImpl implements AssessmentService {
 
 	@Autowired
 	private SurveyInstanceRepository surveyInstanceRepository;
+
+	@Autowired
+	private SurveyResponseRepository surveyResponseRepository;
 
 	/*
 	 * (non-Javadoc)
@@ -93,8 +108,16 @@ public class AssessmentServiceImpl implements AssessmentService {
 			throw new IllegalArgumentException("Project ID was null");
 		}
 
-		LOG.info("Adding survey instance [" + surveyInstance.getName() + "]-["
-				+ surveyInstance.getDescription() + "].");
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<
+				SurveyTemplate> surveyTemplateResponseEntity = restTemplate
+						.getForEntity(
+								createSurveyURLWithPort("/getSurveyTemplateById/"
+										+ surveyInstance.getSurveytemplateid()),
+								SurveyTemplate.class);
+
+		Set<QuestionTemplate> questionTemplates = surveyTemplateResponseEntity
+				.getBody().getQuestionTemplates();
 
 		SurveyInstanceDao surveyInstanceDao = new SurveyInstanceDao(
 				surveyInstance.getSurveytemplateid(), surveyInstance.getProjectid(),
@@ -102,19 +125,31 @@ public class AssessmentServiceImpl implements AssessmentService {
 
 		surveyInstanceDao.setDescription(surveyInstance.getDescription());
 
-		RestTemplate restTemplate = new RestTemplate();
-		ResponseEntity<SurveyTemplate> surveyTemplateResponseEntity = restTemplate
-				.getForEntity(
-						"http://localhost:8090/survey/getSurveyTemplateById/10001",
-						SurveyTemplate.class);
-
-		Set<QuestionTemplate> questionTemplates = surveyTemplateResponseEntity
-				.getBody().getQuestionTemplates();
+		LOG.info("Adding survey instance [" + surveyInstance.getName() + "]-["
+				+ surveyInstance.getDescription() + "].");
 
 		SurveyInstanceDao newSurveyInstanceDao = surveyInstanceRepository
 				.save(surveyInstanceDao);
 
-		LOG.info("Survey instance [" + surveyInstance.getName() + "] added.");
+		for (QuestionTemplate questionTemplate : questionTemplates) {
+
+			if (null != questionTemplate) {
+
+				SurveyResponseDao surveyResponseDao = new SurveyResponseDao(
+						surveyInstance.getSurveytemplateid(), questionTemplate.getText(),
+						"", new Long(1L), surveyInstanceDao);
+
+				SurveyResponseDao newSurveyResponseDao = surveyResponseRepository
+						.save(surveyResponseDao);
+
+				newSurveyInstanceDao.getSurveyResponseDaos().add(newSurveyResponseDao);
+
+			}
+		}
+
+		newSurveyInstanceDao = surveyInstanceRepository.save(newSurveyInstanceDao);
+
+		LOG.info("Survey instance [" + newSurveyInstanceDao.getName() + "] added.");
 
 		return DomainFactory.createSurveyInstance(newSurveyInstanceDao);
 	}
@@ -201,6 +236,16 @@ public class AssessmentServiceImpl implements AssessmentService {
 
 		surveyInstanceRepository.delete(surveyInstanceOptional.get());
 
+	}
+
+	/**
+	 * 
+	 * @param uri
+	 * @return
+	 */
+	private String createSurveyURLWithPort(String uri) {
+		return "http://" + surveyServiceHost + ":" + surveyServicePort + "/"
+				+ surveyServiceName + uri;
 	}
 
 }
