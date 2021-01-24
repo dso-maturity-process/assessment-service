@@ -137,7 +137,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 
 				SurveyResponseDao surveyResponseDao = new SurveyResponseDao(
 						surveyInstance.getSurveytemplateid(), questionTemplate.getText(),
-						"", new Long(1L), surveyInstanceDao);
+						"", questionTemplate.getSequence(), surveyInstanceDao);
 
 				SurveyResponseDao newSurveyResponseDao = surveyResponseRepository
 						.save(surveyResponseDao);
