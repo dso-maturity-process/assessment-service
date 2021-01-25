@@ -248,14 +248,11 @@ public class AssessmentServiceImpl implements AssessmentService {
 	@Override
 	@Transactional
 	public SurveyResponse addSurveyResponse(final Long surveyInstanceId,
-			final SurveyResponse newSurveyResponse)
+			final String question, final Long sequence)
 			throws AssessmentServiceException {
 
-		if (null == newSurveyResponse) {
-			throw new IllegalArgumentException("SurveyResponse was null");
-		}
-		if (null == newSurveyResponse.getQuestion()) {
-			throw new IllegalArgumentException("Question text was null");
+		if ((null == question) || (question.length() == 0)) {
+			throw new IllegalArgumentException("Question text was null or empty");
 		}
 
 		Optional<
@@ -268,13 +265,22 @@ public class AssessmentServiceImpl implements AssessmentService {
 		}
 
 		SurveyInstanceDao surveyInstanceDao = surveyInstanceOptional.get();
+		
+		SurveyResponse newSurveyResponse = new SurveyResponse();
+		
+		newSurveyResponse.setQuestion(question);
+		newSurveyResponse.setSequence(sequence);
 
 		SurveyResponseDao surveyResponseDao = DomainFactory
 				.createSurveyResponseDao(newSurveyResponse);
+		
+		surveyResponseDao.setSurveyInstanceDao(surveyInstanceDao);
 
 		surveyResponseDao = surveyResponseRepository.save(surveyResponseDao);
 
 		surveyInstanceDao.getSurveyResponseDaos().add(surveyResponseDao);
+		
+		surveyInstanceRepository.save(surveyInstanceDao);
 
 		return DomainFactory.createSurveyResponse(surveyResponseDao);
 
@@ -290,7 +296,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 	@Transactional
 	public void updateSurveyResponse(final SurveyResponse surveyResonse)
 			throws AssessmentServiceException {
-
+// TODO:
 	}
 
 	/*
@@ -304,6 +310,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 	public void removeSurveyResponse(final Long id)
 			throws AssessmentServiceException {
 
+// TODO:
 	}
 
 	/**

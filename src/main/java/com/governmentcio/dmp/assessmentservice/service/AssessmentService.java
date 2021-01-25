@@ -47,12 +47,14 @@ public interface AssessmentService {
 	/**
 	 * 
 	 * @param surveyInstanceId
-	 * @param newSurveyResponse
+	 * @param question
+	 * @param sequence
 	 * @return
 	 * @throws AssessmentServiceException
 	 */
 	SurveyResponse addSurveyResponse(final Long surveyInstanceId,
-			final SurveyResponse newSurveyResponse) throws AssessmentServiceException;
+			final String question, final Long sequence)
+			throws AssessmentServiceException;
 
 	/**
 	 * 
