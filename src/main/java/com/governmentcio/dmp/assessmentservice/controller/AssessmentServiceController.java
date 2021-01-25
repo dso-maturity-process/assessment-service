@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.governmentcio.dmp.assessmentservice.service.AssessmentService;
 import com.governmentcio.dmp.exception.AssessmentServiceException;
 import com.governmentcio.dmp.model.SurveyInstance;
+import com.governmentcio.dmp.model.SurveyResponse;
 import com.governmentcio.dmp.utility.ServiceHealth;
 
 /**
@@ -72,6 +74,46 @@ public class AssessmentServiceController {
 	public SurveyInstance addSurveyInstance(
 			@RequestBody(required = true) SurveyInstance surveyInstance) {
 		return assessmentService.addSurveyInstance(surveyInstance);
+	}
+
+	/**
+	 * 
+	 * @param surveyInstanceId
+	 * @param question
+	 * @param sequence
+	 * @return
+	 * @throws AssessmentServiceException
+	 */
+	@RequestMapping(value = "/addSurveyResponse", method = RequestMethod.POST)
+	public SurveyResponse addSurveyResponse(
+			@RequestParam(value = "surveyInstanceId", required = true) Long surveyInstanceId,
+			@RequestParam(value = "question", required = true) String question,
+			@RequestParam(value = "sequence", required = true) Long sequence)
+			throws AssessmentServiceException {
+		return assessmentService.addSurveyResponse(surveyInstanceId, question,
+				sequence);
+	}
+
+	/**
+	 * 
+	 * @param surveyResponse
+	 * @throws AssessmentServiceException
+	 */
+	@RequestMapping(value = "/updateSurveyResponse", method = RequestMethod.POST)
+	public void updateSurveyResponse(
+			@RequestBody(required = true) SurveyResponse surveyResponse)
+			throws AssessmentServiceException {
+		assessmentService.updateSurveyResponse(surveyResponse);
+	}
+
+	/**
+	 * 
+	 * @param id
+	 */
+	@DeleteMapping("/removeSurveyResponse/{id}")
+	public void removeSurveyResponse(@PathVariable Long id)
+			throws AssessmentServiceException {
+		assessmentService.removeSurveyResponse(id);
 	}
 
 	/**
