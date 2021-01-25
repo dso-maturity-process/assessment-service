@@ -23,6 +23,7 @@ import com.governmentcio.dmp.dao.SurveyResponseDao;
 import com.governmentcio.dmp.exception.AssessmentServiceException;
 import com.governmentcio.dmp.model.QuestionTemplate;
 import com.governmentcio.dmp.model.SurveyInstance;
+import com.governmentcio.dmp.model.SurveyResponse;
 import com.governmentcio.dmp.model.SurveyTemplate;
 import com.governmentcio.dmp.repository.SurveyInstanceRepository;
 import com.governmentcio.dmp.repository.SurveyResponseRepository;
@@ -136,8 +137,8 @@ public class AssessmentServiceImpl implements AssessmentService {
 			if (null != questionTemplate) {
 
 				SurveyResponseDao surveyResponseDao = new SurveyResponseDao(
-						surveyInstance.getSurveytemplateid(), questionTemplate.getText(),
-						"", questionTemplate.getSequence(), surveyInstanceDao);
+						questionTemplate.getText(), "", questionTemplate.getSequence(),
+						surveyInstanceDao);
 
 				SurveyResponseDao newSurveyResponseDao = surveyResponseRepository
 						.save(surveyResponseDao);
@@ -235,6 +236,73 @@ public class AssessmentServiceImpl implements AssessmentService {
 		}
 
 		surveyInstanceRepository.delete(surveyInstanceOptional.get());
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.governmentcio.dmp.assessmentservice.service.AssessmentService#
+	 * addSurveyResponse(java.lang.Long, java.lang.String, java.lang.Long)
+	 */
+	@Override
+	@Transactional
+	public SurveyResponse addSurveyResponse(final Long surveyInstanceId,
+			final SurveyResponse newSurveyResponse)
+			throws AssessmentServiceException {
+
+		if (null == newSurveyResponse) {
+			throw new IllegalArgumentException("SurveyResponse was null");
+		}
+		if (null == newSurveyResponse.getQuestion()) {
+			throw new IllegalArgumentException("Question text was null");
+		}
+
+		Optional<
+				SurveyInstanceDao> surveyInstanceOptional = surveyInstanceRepository
+						.findById(surveyInstanceId);
+
+		if (!surveyInstanceOptional.isPresent()) {
+			throw new AssessmentServiceException(
+					"No survey found using id [" + surveyInstanceId + "]");
+		}
+
+		SurveyInstanceDao surveyInstanceDao = surveyInstanceOptional.get();
+
+		SurveyResponseDao surveyResponseDao = DomainFactory
+				.createSurveyResponseDao(newSurveyResponse);
+
+		surveyResponseDao = surveyResponseRepository.save(surveyResponseDao);
+
+		surveyInstanceDao.getSurveyResponseDaos().add(surveyResponseDao);
+
+		return DomainFactory.createSurveyResponse(surveyResponseDao);
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.governmentcio.dmp.assessmentservice.service.AssessmentService#
+	 * updateSurveyResponse(com.governmentcio.dmp.model.SurveyResponse)
+	 */
+	@Override
+	@Transactional
+	public void updateSurveyResponse(final SurveyResponse surveyResonse)
+			throws AssessmentServiceException {
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.governmentcio.dmp.assessmentservice.service.AssessmentService#
+	 * removeSurveyResponse(java.lang.Long)
+	 */
+	@Override
+	@Transactional
+	public void removeSurveyResponse(final Long id)
+			throws AssessmentServiceException {
 
 	}
 

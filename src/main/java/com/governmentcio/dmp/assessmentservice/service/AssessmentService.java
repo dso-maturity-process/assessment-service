@@ -2,6 +2,7 @@ package com.governmentcio.dmp.assessmentservice.service;
 
 import com.governmentcio.dmp.exception.AssessmentServiceException;
 import com.governmentcio.dmp.model.SurveyInstance;
+import com.governmentcio.dmp.model.SurveyResponse;
 
 public interface AssessmentService {
 
@@ -42,5 +43,30 @@ public interface AssessmentService {
 	 * @param id
 	 */
 	void removeSurveyInstance(Long id) throws AssessmentServiceException;
+
+	/**
+	 * 
+	 * @param surveyInstanceId
+	 * @param newSurveyResponse
+	 * @return
+	 * @throws AssessmentServiceException
+	 */
+	SurveyResponse addSurveyResponse(final Long surveyInstanceId,
+			final SurveyResponse newSurveyResponse) throws AssessmentServiceException;
+
+	/**
+	 * 
+	 * @param surveyResonse
+	 * @throws AssessmentServiceException
+	 */
+	void updateSurveyResponse(final SurveyResponse surveyResonse)
+			throws AssessmentServiceException;
+
+	/**
+	 * 
+	 * @param id
+	 * @throws AssessmentServiceException
+	 */
+	void removeSurveyResponse(final Long id) throws AssessmentServiceException;
 
 }
