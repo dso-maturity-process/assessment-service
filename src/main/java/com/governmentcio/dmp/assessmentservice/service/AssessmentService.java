@@ -58,10 +58,10 @@ public interface AssessmentService {
 
 	/**
 	 * 
-	 * @param surveyResonse
+	 * @param surveyResponse
 	 * @throws AssessmentServiceException
 	 */
-	void updateSurveyResponse(final SurveyResponse surveyResonse)
+	void updateSurveyResponse(final SurveyResponse surveyResponse)
 			throws AssessmentServiceException;
 
 	/**

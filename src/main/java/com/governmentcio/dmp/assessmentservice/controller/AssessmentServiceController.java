@@ -96,6 +96,28 @@ public class AssessmentServiceController {
 
 	/**
 	 * 
+	 * @param surveyResponse
+	 * @throws AssessmentServiceException
+	 */
+	@RequestMapping(value = "/updateSurveyResponse", method = RequestMethod.POST)
+	public void updateSurveyResponse(
+			@RequestBody(required = true) SurveyResponse surveyResponse)
+			throws AssessmentServiceException {
+		assessmentService.updateSurveyResponse(surveyResponse);
+	}
+
+	/**
+	 * 
+	 * @param id
+	 */
+	@DeleteMapping("/removeSurveyResponse/{id}")
+	public void removeSurveyResponse(@PathVariable Long id)
+			throws AssessmentServiceException {
+		assessmentService.removeSurveyResponse(id);
+	}
+
+	/**
+	 * 
 	 * @param id
 	 * @return
 	 */

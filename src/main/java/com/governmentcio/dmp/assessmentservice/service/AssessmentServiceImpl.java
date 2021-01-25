@@ -232,7 +232,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 
 		if (!surveyInstanceOptional.isPresent()) {
 			throw new AssessmentServiceException(
-					"SurveyInstance not found for update using id [" + id + "]");
+					"SurveyInstance not found for removal using id [" + id + "]");
 		}
 
 		surveyInstanceRepository.delete(surveyInstanceOptional.get());
@@ -265,21 +265,21 @@ public class AssessmentServiceImpl implements AssessmentService {
 		}
 
 		SurveyInstanceDao surveyInstanceDao = surveyInstanceOptional.get();
-		
+
 		SurveyResponse newSurveyResponse = new SurveyResponse();
-		
+
 		newSurveyResponse.setQuestion(question);
 		newSurveyResponse.setSequence(sequence);
 
 		SurveyResponseDao surveyResponseDao = DomainFactory
 				.createSurveyResponseDao(newSurveyResponse);
-		
+
 		surveyResponseDao.setSurveyInstanceDao(surveyInstanceDao);
 
 		surveyResponseDao = surveyResponseRepository.save(surveyResponseDao);
 
 		surveyInstanceDao.getSurveyResponseDaos().add(surveyResponseDao);
-		
+
 		surveyInstanceRepository.save(surveyInstanceDao);
 
 		return DomainFactory.createSurveyResponse(surveyResponseDao);
@@ -294,9 +294,29 @@ public class AssessmentServiceImpl implements AssessmentService {
 	 */
 	@Override
 	@Transactional
-	public void updateSurveyResponse(final SurveyResponse surveyResonse)
+	public void updateSurveyResponse(final SurveyResponse surveyResponse)
 			throws AssessmentServiceException {
-// TODO:
+
+		if (null == surveyResponse) {
+			throw new IllegalArgumentException("SurveyResponse was null");
+		}
+
+		Optional<
+				SurveyResponseDao> surveyResponseOptional = surveyResponseRepository
+						.findById(surveyResponse.getId());
+
+		if (!surveyResponseOptional.isPresent()) {
+			throw new AssessmentServiceException(
+					"SurveyResponse not found for update.");
+		}
+
+		SurveyResponseDao surveyResponseDaoToUpdate = surveyResponseOptional.get();
+
+		surveyResponseDaoToUpdate.setQuestion(surveyResponse.getQuestion());
+		surveyResponseDaoToUpdate.setAnswer(surveyResponse.getAnswer());
+		surveyResponseDaoToUpdate.setSequence(surveyResponse.getSequence());
+
+		surveyResponseRepository.save(surveyResponseDaoToUpdate);
 	}
 
 	/*
@@ -310,7 +330,16 @@ public class AssessmentServiceImpl implements AssessmentService {
 	public void removeSurveyResponse(final Long id)
 			throws AssessmentServiceException {
 
-// TODO:
+		Optional<
+		SurveyResponseDao> surveyResponseOptional = surveyResponseRepository
+						.findById(id);
+
+		if (!surveyResponseOptional.isPresent()) {
+			throw new AssessmentServiceException(
+					"SurveyResponse not found for removal using id [" + id + "]");
+		}
+
+		surveyResponseRepository.delete(surveyResponseOptional.get());
 	}
 
 	/**

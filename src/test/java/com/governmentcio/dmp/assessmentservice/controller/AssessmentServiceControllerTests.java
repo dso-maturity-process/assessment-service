@@ -370,7 +370,7 @@ class AssessmentServiceControllerTests {
 
 		assertNotNull(newSurveyResponse);
 
-		// Get the SurveyInstance just added
+		// Get the SurveyInstance to which the SurveyResponse was just added
 
 		response = restTemplate.exchange(
 				createAssessmentURLWithPort("/getSurveyInstance/" + surveyInstanceId),
@@ -393,6 +393,8 @@ class AssessmentServiceControllerTests {
 
 		assertTrue(surveyResponses.size() == 3);
 
+		SurveyResponse surveyResponseThatWasAdded = null;
+
 		boolean foundIt = false;
 
 		for (SurveyResponse surveyResponse : surveyResponses) {
@@ -400,6 +402,7 @@ class AssessmentServiceControllerTests {
 				if (surveyResponse.getQuestion().equals(question)
 						&& surveyResponse.getSequence().equals(sequence)) {
 					foundIt = true;
+					surveyResponseThatWasAdded = surveyResponse;
 					break;
 				}
 			}
@@ -407,9 +410,81 @@ class AssessmentServiceControllerTests {
 
 		assertTrue(foundIt);
 
-		// Remove the SurveyInstance
+		// Update the SurveyResponse question with new text
+
+		String newQuestion = "ThIs ThE nEw QuEsTiOn TeXt.";
+
+		surveyResponseThatWasAdded.setQuestion(newQuestion);
+
+		headers.setAccept(acceptableMediaTypes);
+		HttpEntity<
+				SurveyResponse> updatedResponseEntity = new HttpEntity<SurveyResponse>(
+						surveyResponseThatWasAdded, headers);
 
 		ResponseEntity<Void> responseVoid = restTemplate.exchange(
+				createAssessmentURLWithPort("/updateSurveyResponse"), HttpMethod.POST,
+				updatedResponseEntity, new ParameterizedTypeReference<Void>() {
+				});
+
+		assertNotNull(response);
+
+		assertTrue(response.getStatusCode() == HttpStatus.OK);
+
+		// Get the SurveyInstance to which the SurveyResponse was just updated
+
+		response = restTemplate.exchange(
+				createAssessmentURLWithPort("/getSurveyInstance/" + surveyInstanceId),
+				HttpMethod.GET, surveyEntity,
+				new ParameterizedTypeReference<SurveyInstance>() {
+				});
+
+		assertNotNull(response);
+
+		assertTrue(response.getStatusCode() == HttpStatus.OK);
+
+		retrievedSurveyInstance = response.getBody();
+
+		assertNotNull(retrievedSurveyInstance);
+
+		surveyResponses = retrievedSurveyInstance.getSurveyresponses();
+
+		assertNotNull(surveyResponses);
+
+		assertTrue(surveyResponses.size() == 3);
+
+		SurveyResponse surveyResponseThatWasUpdated = null;
+
+		foundIt = false;
+
+		for (SurveyResponse surveyResponse : surveyResponses) {
+			if (null != surveyResponse) {
+				if (surveyResponse.getQuestion().equals(newQuestion)
+						&& surveyResponse.getSequence().equals(sequence)) {
+					foundIt = true;
+					surveyResponseThatWasUpdated = surveyResponse;
+					break;
+				}
+			}
+		}
+
+		assertTrue(foundIt);
+
+		// Remove the survey response
+
+		responseVoid = restTemplate.exchange(
+				createAssessmentURLWithPort(
+						"/removeSurveyResponse/" + surveyResponseThatWasUpdated.getId()),
+				HttpMethod.DELETE, surveyEntity,
+				new ParameterizedTypeReference<Void>() {
+				});
+
+		assertNotNull(responseVoid);
+
+		assertTrue(responseVoid.getStatusCode() == HttpStatus.OK);
+
+		// Remove the SurveyInstance
+
+		responseVoid = restTemplate.exchange(
 				createAssessmentURLWithPort(
 						"/removeSurveyInstance/" + retrievedSurveyInstance.getId()),
 				HttpMethod.DELETE, surveyEntity,
