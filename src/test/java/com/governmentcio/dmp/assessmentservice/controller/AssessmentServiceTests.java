@@ -45,7 +45,7 @@ import com.governmentcio.dmp.utility.ServiceHealth;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureStubRunner(stubsMode = StubRunnerProperties.StubsMode.LOCAL, ids = "com.governmentcio.dmp:survey-service:+:stubs:8090")
-class AssessmentServiceControllerTests {
+class AssessmentServiceTests {
 
 	@Value("${survey.service.host}")
 	private String surveyServiceHost;
