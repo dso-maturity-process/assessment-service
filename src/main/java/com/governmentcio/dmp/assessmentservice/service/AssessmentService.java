@@ -14,10 +14,7 @@ public interface AssessmentService {
 
 	/**
 	 * 
-	 * @param surveyTemplateId
-	 * @param projectId
-	 * @param name
-	 * @param description
+	 * @param surveyInstance
 	 * @return
 	 */
 	SurveyInstance addSurveyInstance(SurveyInstance surveyInstance);
