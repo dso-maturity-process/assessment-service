@@ -29,6 +29,13 @@ public interface AssessmentService {
 
 	/**
 	 * 
+	 * @param projectId
+	 * @return
+	 */
+	Iterable<SurveyInstance> getSurveyInstancesByProjectId(final Long projectId);
+
+	/**
+	 * 
 	 * @param surveyInstance
 	 * @throws SurveyServiceException
 	 */

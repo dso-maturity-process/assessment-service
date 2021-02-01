@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -69,6 +70,33 @@ public class AssessmentServiceImpl implements AssessmentService {
 		Iterable<
 				SurveyInstanceDao> iterableSurveyInstanceDaos = surveyInstanceRepository
 						.findAll();
+
+		Set<SurveyInstance> surveyInstances = new HashSet<SurveyInstance>();
+
+		for (SurveyInstanceDao nextDao : iterableSurveyInstanceDaos) {
+			SurveyInstance surveyInstance = DomainFactory
+					.createSurveyInstance(nextDao);
+			if (null != surveyInstance) {
+				surveyInstances.add(surveyInstance);
+			}
+		}
+
+		return surveyInstances;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.governmentcio.dmp.assessmentservice.service.AssessmentService#
+	 * getSurveyInstancesByProjectId(java.lang.Long)
+	 */
+	@Override
+	public Iterable<SurveyInstance> getSurveyInstancesByProjectId(
+			final Long projectId) {
+
+		Iterable<
+				SurveyInstanceDao> iterableSurveyInstanceDaos = surveyInstanceRepository
+						.findByProjectId(projectId, PageRequest.of(0, 10));
 
 		Set<SurveyInstance> surveyInstances = new HashSet<SurveyInstance>();
 
@@ -331,7 +359,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 			throws AssessmentServiceException {
 
 		Optional<
-		SurveyResponseDao> surveyResponseOptional = surveyResponseRepository
+				SurveyResponseDao> surveyResponseOptional = surveyResponseRepository
 						.findById(id);
 
 		if (!surveyResponseOptional.isPresent()) {
