@@ -64,6 +64,16 @@ public class AssessmentServiceController {
 
 	/**
 	 * 
+	 * @return
+	 */
+	@GetMapping("/allSurveyInstancesByProjectId")
+	public Iterable<SurveyInstance> getSurveyInstancesByProjectId(
+			@RequestParam(value = "projectId", required = true) final Long projectId) {
+		return assessmentService.getSurveyInstancesByProjectId(projectId);
+	}
+
+	/**
+	 * 
 	 * @param surveyTemplateId
 	 * @param projectId
 	 * @param name

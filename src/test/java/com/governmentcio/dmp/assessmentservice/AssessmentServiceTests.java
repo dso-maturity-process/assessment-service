@@ -1,5 +1,5 @@
 
-package com.governmentcio.dmp.assessmentservice.controller;
+package com.governmentcio.dmp.assessmentservice;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -190,6 +190,41 @@ class AssessmentServiceTests {
 	 * 
 	 */
 	@Test
+	public void test_Get_all_SurveyInstances_by_Project_ID() {
+
+		HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+
+		String parameters = "?projectId=" + 30001;
+
+		ResponseEntity<Iterable<SurveyInstance>> response = restTemplate.exchange(
+				createAssessmentURLWithPort(
+						"/allSurveyInstancesByProjectId" + parameters),
+				HttpMethod.GET, entity,
+				new ParameterizedTypeReference<Iterable<SurveyInstance>>() {
+				});
+
+		assertNotNull(response);
+
+		assertTrue(response.getStatusCode() == HttpStatus.OK);
+
+		Iterable<SurveyInstance> surveyInstances = response.getBody();
+
+		assertNotNull(surveyInstances);
+
+		// from import.sql
+		String projectName = "VA - Initial Survey - WEEMS";
+
+		for (SurveyInstance surveyInstance : surveyInstances) {
+			assertNotNull(surveyInstance);
+			assertTrue(surveyInstance.getName().equals(projectName));
+		}
+
+	}
+
+	/**
+	 * 
+	 */
+	@Test
 	public void test_SurveyInstance_CRUD_Functionality() {
 
 		// Prepare acceptable media type
@@ -216,10 +251,6 @@ class AssessmentServiceTests {
 		ResponseEntity<SurveyInstance> response = restTemplate.exchange(
 				createAssessmentURLWithPort("/addSurveyInstance"), HttpMethod.POST,
 				surveyEntity, SurveyInstance.class);
-
-		assertNotNull(response);
-
-		assertTrue(response.getStatusCode() == HttpStatus.OK);
 
 		assertNotNull(response);
 

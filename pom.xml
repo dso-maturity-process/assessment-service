@@ -224,6 +224,11 @@
 			<artifactId>spring-cloud-starter-contract-stub-runner</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-contract-verifier</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -538,6 +543,17 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-contract-maven-plugin -->
+			<plugin>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-contract-maven-plugin</artifactId>
+				<version>${spring-cloud-contract.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<baseClassForTests>com.governmentcio.dmp.assessmentservice.BaseClass</baseClassForTests>
+				</configuration>
 			</plugin>
 
 			<!-- http://maven.apache.org/surefire/maven-failsafe-plugin - integration 
