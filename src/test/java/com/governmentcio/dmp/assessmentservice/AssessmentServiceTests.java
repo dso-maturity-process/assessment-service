@@ -235,12 +235,16 @@ class AssessmentServiceTests {
 		String name = "Test survey name";
 		String description = "Test survey description";
 		Long projectId = 8181L;
+		Long userId = 10001L;
+		Long roleId = 10001L;
 
 		SurveyInstance surveyInstance = new SurveyInstance();
 		surveyInstance.setName(name);
 		surveyInstance.setDescription(description);
 		surveyInstance.setProjectid(projectId);
 		surveyInstance.setSurveytemplateid(surveyTemplateId);
+		surveyInstance.setUserid(userId);
+		surveyInstance.setRoleid(roleId);
 
 		// Prepare header
 		HttpHeaders headers = new HttpHeaders();
@@ -347,12 +351,16 @@ class AssessmentServiceTests {
 		String name = "Test survey name";
 		String description = "Test survey description";
 		Long projectId = 8181L;
+		Long userId = 10001L;
+		Long roleId = 10001L;
 
 		SurveyInstance surveyInstance = new SurveyInstance();
 		surveyInstance.setName(name);
 		surveyInstance.setDescription(description);
 		surveyInstance.setProjectid(projectId);
 		surveyInstance.setSurveytemplateid(surveyTemplateId);
+		surveyInstance.setUserid(userId);
+		surveyInstance.setRoleid(roleId);
 
 		// Prepare header
 		HttpHeaders headers = new HttpHeaders();

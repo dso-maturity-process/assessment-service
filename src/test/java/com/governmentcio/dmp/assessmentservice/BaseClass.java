@@ -36,7 +36,7 @@ public abstract class BaseClass {
 		RestAssuredMockMvc.standaloneSetup(assessmentServiceController);
 
 		SurveyInstance surveyInstance = new SurveyInstance(10001L, 20001L, 30001L,
-				"VA - Initial Survey - WEEMS");
+				10001L, 10001L, "VA - Initial Survey - WEEMS");
 		surveyInstance.setDescription("First survey for WEEMS");
 
 		SurveyResponse surveyResponse = new SurveyResponse(20001L,

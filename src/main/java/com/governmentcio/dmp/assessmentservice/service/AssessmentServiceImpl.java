@@ -136,6 +136,12 @@ public class AssessmentServiceImpl implements AssessmentService {
 		if (null == surveyInstance.getProjectid()) {
 			throw new IllegalArgumentException("Project ID was null");
 		}
+		if (null == surveyInstance.getUserid()) {
+			throw new IllegalArgumentException("User ID was null");
+		}
+		if (null == surveyInstance.getRoleid()) {
+			throw new IllegalArgumentException("Role ID was null");
+		}
 
 		RestTemplate restTemplate = new RestTemplate();
 		ResponseEntity<
@@ -150,6 +156,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 
 		SurveyInstanceDao surveyInstanceDao = new SurveyInstanceDao(
 				surveyInstance.getSurveytemplateid(), surveyInstance.getProjectid(),
+				surveyInstance.getUserid(), surveyInstance.getRoleid(),
 				surveyInstance.getName());
 
 		surveyInstanceDao.setDescription(surveyInstance.getDescription());
